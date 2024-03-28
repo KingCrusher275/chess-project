@@ -20,8 +20,8 @@ class Game:
                      for j in range(self.ROWS)]
         self.SQUARE_SIZE = 60
         self.turn = 1
-        # self.moved =  Queenside White Rook, White King, Kingside White Rook, Kingside Black Rook, Black King, Queenside Black King
-        self.moved = [[False, False, False], [False, False, False]]
+        # self.moved =  Black Queenside Castle, White Queenside Castle, Black Kingside Castle, White Kingside Castle
+        self.castle = [True for _ in range(4)]
         self.lastMove = None
 
     def drawBoard(self, screen):
