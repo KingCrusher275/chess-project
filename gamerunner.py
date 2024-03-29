@@ -141,6 +141,8 @@ def handleMove(event):
                        ][cgame.squareClicked[1]].clicked = False
             cgame.squareClicked = (relx, rely)
         elif (validateMove(cgame.squareClicked[0], cgame.squareClicked[1], relx, rely)):
+            makeMove(cgame.squareClicked[0],
+                     cgame.squareClicked[1], relx, rely)
             cgame.clicked = False
             cgame.game[cgame.squareClicked[0]
                        ][cgame.squareClicked[1]].clicked = False
@@ -170,7 +172,57 @@ def inCheck(color):
     return False
 
 
+def makeMove(x, y, fx, fy):
+    cur = cgame.game[x][y].piece
+    # print(cur)
+    cgame.lastMove = ((x, y), (fx, fy))
+    if ((cur == 0 or cur == 1) and (abs(fx - x) == 1 and abs(fy - y) == 1 and cgame.game[fx][fy].piece == None)):
+        cgame.game[fx][fy].piece = cgame.game[x][y].piece
+        cgame.game[x][y].piece = None
+        cgame.game[x][fy].piece = None
+    elif ((cur == 10 or cur == 11) and (abs(fy-y) > 1)):
+        if (fy - y > 1):
+            mult = 1
+        else:
+            mult = -1
+        if (cur == 10):
+            rank = 0
+        else:
+            rank = 7
+        cgame.game[rank][4+2*mult].piece = cgame.game[rank][4].piece
+        cgame.game[rank][4].piece = None
+        if (fy - y > 1):
+            cgame.game[rank][5].piece = cgame.game[rank][7].piece
+            cgame.game[rank][7].piece = None
+        else:
+            cgame.game[rank][3].piece = cgame.game[rank][0].piece
+            cgame.game[rank][0].piece = None
+    else:
+        cgame.game[fx][fy].piece = cgame.game[x][y].piece
+        cgame.game[x][y].piece = None
+
+    if (cur == 10 or cur == 11):
+        cgame.castle[cur % 2] = False
+        cgame.castle[2 + cur % 2] = False
+    elif (x == 0 and y == 0):
+        cgame.castle[0] = False
+    elif (x == 0 and y == 7):
+        cgame.castle[2] = False
+    elif (x == 7 and y == 0):
+        cgame.castle[1] = False
+    elif (x == 7 and y == 7):
+        cgame.castle[3] = False
+
+
 def validateMove(x, y, fx, fy):
+    moves = generateMove(x, y)
+    if ((fx, fy) in moves):
+        return True
+    else:
+        return False
+
+
+def generateMove(x, y):
     moves = []
     cur = cgame.game[x][y].piece
     if (cur == 0 or cur == 1):
@@ -184,20 +236,20 @@ def validateMove(x, y, fx, fy):
     if (cur == 10 or cur == 11):
         moves += kingMove(x, y)
 
-    if (fx, fy) in moves:
+    validmoves = []
+    for (fx, fy) in moves:
         if ((cur == 0 or cur == 1) and (abs(fx - x) == 1 and abs(fy - y) == 1 and cgame.game[fx][fy].piece == None)):
             tmp = cgame.game[x][fy].piece
             cgame.game[fx][fy].piece = cgame.game[x][y].piece
             cgame.game[x][y].piece = None
             cgame.game[x][fy].piece = None
+
             if (not inCheck(cur % 2)):
-                cgame.lastMove = ((x, y), (fx, fy))
-                return True
-            else:
-                cgame.game[x][y].piece = cgame.game[fx][fy].piece
-                cgame.game[fx][fy].piece = None
-                cgame.game[x][fy].piece = tmp
-                return False
+                validmoves.append((fx, fy))
+
+            cgame.game[x][y].piece = cgame.game[fx][fy].piece
+            cgame.game[fx][fy].piece = None
+            cgame.game[x][fy].piece = tmp
         elif ((cur == 10 or cur == 11) and (abs(fy-y) > 1)):
             if (fy - y > 1):
                 mult = 1
@@ -213,39 +265,27 @@ def validateMove(x, y, fx, fy):
                 if (inCheck(cur % 2)):
                     cgame.game[rank][4].piece = cgame.game[rank][4+i*mult].piece
                     cgame.game[rank][4+i*mult].piece = None
-
                     works = False
                     break
                 if (i == 2):
+                    cgame.game[rank][4].piece = cgame.game[rank][4+i*mult].piece
+                    cgame.game[rank][4+i*mult].piece = None
                     break
                 cgame.game[rank][4+(i+1) *
                                  mult].piece = cgame.game[rank][4+i*mult].piece
                 cgame.game[rank][4+i*mult].piece = None
             if (works):
-                if (fy - y > 1):
-                    cgame.game[rank][5].piece = cgame.game[rank][7].piece
-                    cgame.game[rank][7].piece = None
-                else:
-                    cgame.game[rank][3].piece = cgame.game[rank][0].piece
-                    cgame.game[rank][0].piece = None
-                cgame.lastMove = ((x, y), (fx, fy))
-                return True
-            else:
-                return False
+                validmoves.append((fx, fy))
         else:
             tmp = cgame.game[fx][fy].piece
             cgame.game[fx][fy].piece = cgame.game[x][y].piece
             cgame.game[x][y].piece = None
-            print(inCheck(0))
-            if (inCheck(cur % 2)):
-                cgame.game[x][y].piece = cgame.game[fx][fy].piece
-                cgame.game[fx][fy].piece = None
-                cgame.game[fx][fy].piece = tmp
-            else:
-                cgame.lastMove = ((x, y), (fx, fy))
-                return True
+            if (not inCheck(cur % 2)):
+                validmoves.append((fx, fy))
 
-    return False
+            cgame.game[x][y].piece = cgame.game[fx][fy].piece
+            cgame.game[fx][fy].piece = tmp
+    return validmoves
 
 
 if __name__ == "__main__":

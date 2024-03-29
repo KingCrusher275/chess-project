@@ -20,7 +20,7 @@ class Game:
                      for j in range(self.ROWS)]
         self.SQUARE_SIZE = 60
         self.turn = 1
-        # self.moved =  Black Queenside Castle, White Queenside Castle, Black Kingside Castle, White Kingside Castle
+        # self.castle =  Black Queenside Castle, White Queenside Castle, Black Kingside Castle, White Kingside Castle
         self.castle = [True for _ in range(4)]
         self.lastMove = None
 
