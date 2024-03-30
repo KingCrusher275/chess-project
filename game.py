@@ -4,7 +4,8 @@ from square import Square
 
 WHITE = (255, 255, 255)
 BLACK = (100, 100, 100)
-GREEN = (0, 0, 255)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
 
 names = ['bpawn', 'wpawn', 'bknight', 'wknight', 'bbishop',
          'wbishop', 'brook', 'wrook', 'bqueen', 'wqueen', 'bking', 'wking']
@@ -29,8 +30,12 @@ class Game:
             for col in range(self.COLS):
                 square = pygame.Surface((self.SQUARE_SIZE, self.SQUARE_SIZE))
                 square_rect = square.get_rect()
-                square.fill(
-                    self.game[row][col].color if not self.game[row][col].clicked else GREEN)
+                if (self.game[row][col].clicked):
+                    square.fill(BLUE)
+                elif (self.game[row][col].possibleMove):
+                    square.fill(GREEN)
+                else:
+                    square.fill(self.game[row][col].color)
                 if (self.game[row][col].piece != None):
 
                     img = pygame.image.load(

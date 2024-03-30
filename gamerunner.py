@@ -72,7 +72,6 @@ def knightMove(x, y):
 
 
 def kingMove(x, y):
-    color = cgame.game[x][y].piece % 2
     moves = []
     dx = [-1, 0, 1]
     dy = [-1, 0, 1]
@@ -86,14 +85,12 @@ def kingMove(x, y):
     if (cgame.game[x][y].piece % 2 == 1):
         rank = 7
         ix = 1
-    if (cgame.castle[ix] and not inCheck(color)):
+    if (cgame.castle[ix+2]):
         if (cgame.game[rank][5].piece == None and cgame.game[rank][6].piece == None):
             moves.append((rank, 6))
-    if (cgame.castle[ix+2] and not inCheck(color)):
+    if (cgame.castle[ix]):
         if (cgame.game[rank][1].piece == None and cgame.game[rank][2].piece == None and cgame.game[rank][3].piece == None):
             moves.append((rank, 2))
-    else:
-        pass
     return moves
 
 
@@ -130,23 +127,59 @@ def handleMove(event):
     if (cgame.game[relx][rely].clicked):
         cgame.game[relx][rely].clicked = False
         cgame.clicked = False
+        togglePossibleMoves(relx, rely)
     elif (not cgame.clicked and cgame.game[relx][rely].piece != None and cgame.game[relx][rely].piece % 2 == cgame.turn):
         cgame.game[relx][rely].clicked = True
         cgame.clicked = True
         cgame.squareClicked = (relx, rely)
+        togglePossibleMoves(relx, rely)
     elif (cgame.clicked):
         if (cgame.game[relx][rely].piece != None and cgame.game[relx][rely].piece % 2 == cgame.game[cgame.squareClicked[0]][cgame.squareClicked[1]].piece % 2):
             cgame.game[relx][rely].clicked = True
+            togglePossibleMoves(cgame.squareClicked[0], cgame.squareClicked[1])
             cgame.game[cgame.squareClicked[0]
                        ][cgame.squareClicked[1]].clicked = False
+            togglePossibleMoves(relx, rely)
             cgame.squareClicked = (relx, rely)
         elif (validateMove(cgame.squareClicked[0], cgame.squareClicked[1], relx, rely)):
+            togglePossibleMoves(cgame.squareClicked[0], cgame.squareClicked[1])
             makeMove(cgame.squareClicked[0],
                      cgame.squareClicked[1], relx, rely)
             cgame.clicked = False
             cgame.game[cgame.squareClicked[0]
                        ][cgame.squareClicked[1]].clicked = False
             cgame.turn = 1 - cgame.turn
+
+
+def promotion(x, y, fx, fy, cur):
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if (event.key == pygame.K_q or event.key == pygame.K_r or event.key == pygame.K_k or event.key == pygame.K_b):
+                    if (event.key == pygame.K_q):
+                        cgame.game[fx][fy].piece = 8 + cur
+                        cgame.game[x][y].piece = None
+                    elif (event.key == pygame.K_r):
+                        cgame.game[fx][fy].piece = 6 + cur
+                        cgame.game[x][y].piece = None
+                    elif (event.key == pygame.K_b):
+                        cgame.game[fx][fy].piece = 4 + cur
+                        cgame.game[x][y].piece = None
+                    elif (event.key == pygame.K_b):
+                        cgame.game[fx][fy].piece = 2 + cur
+                        cgame.game[x][y].piece = None
+
+                    return
+
+
+def togglePossibleMoves(x, y):
+    validMoves = generateMove(x, y)
+    for move in validMoves:
+        cgame.game[move[0]][move[1]
+                            ].possibleMove = not cgame.game[move[0]][move[1]].possibleMove
 
 
 def inCheck(color):
@@ -180,6 +213,8 @@ def makeMove(x, y, fx, fy):
         cgame.game[fx][fy].piece = cgame.game[x][y].piece
         cgame.game[x][y].piece = None
         cgame.game[x][fy].piece = None
+    elif ((cur == 0 or cur == 1) and (fx == 0 or fx == 7)):
+        promotion(x, y, fx, fy, cur)
     elif ((cur == 10 or cur == 11) and (abs(fy-y) > 1)):
         if (fy - y > 1):
             mult = 1
@@ -204,13 +239,13 @@ def makeMove(x, y, fx, fy):
     if (cur == 10 or cur == 11):
         cgame.castle[cur % 2] = False
         cgame.castle[2 + cur % 2] = False
-    elif (x == 0 and y == 0):
+    if ((x == 0 and y == 0) or (fx == 0 and fy == 0)):
         cgame.castle[0] = False
-    elif (x == 0 and y == 7):
+    if ((x == 0 and y == 7) or (fx == 0 and fy == 7)):
         cgame.castle[2] = False
-    elif (x == 7 and y == 0):
+    if ((x == 7 and y == 0) or (fx == 7 and fy == 0)):
         cgame.castle[1] = False
-    elif (x == 7 and y == 7):
+    if ((x == 7 and y == 7) or (fx == 7 and fy == 7)):
         cgame.castle[3] = False
 
 
@@ -262,14 +297,18 @@ def generateMove(x, y):
 
             works = True
             for i in range(3):
+                tmp = cgame.game[rank][4+i*mult].piece
                 if (inCheck(cur % 2)):
-                    cgame.game[rank][4].piece = cgame.game[rank][4+i*mult].piece
+
                     cgame.game[rank][4+i*mult].piece = None
+                    cgame.game[rank][4].piece = tmp
+
                     works = False
                     break
                 if (i == 2):
-                    cgame.game[rank][4].piece = cgame.game[rank][4+i*mult].piece
                     cgame.game[rank][4+i*mult].piece = None
+                    cgame.game[rank][4].piece = tmp
+
                     break
                 cgame.game[rank][4+(i+1) *
                                  mult].piece = cgame.game[rank][4+i*mult].piece
