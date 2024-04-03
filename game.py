@@ -12,7 +12,7 @@ GREEN = (0, 255, 0)
 names = ['bpawn', 'wpawn', 'bknight', 'wknight', 'bbishop',
          'wbishop', 'brook', 'wrook', 'bqueen', 'wqueen', 'bking', 'wking']
 
-
+symbolToIx = {'p':0, 'P':1, 'n':2, 'N':3, 'b':4, 'B':5, 'r':6, 'R':7, 'q':8, 'Q':9, 'k':10, 'K':11}
 class Game:
     def __init__(self):
         self.ROWS = 8
@@ -24,10 +24,55 @@ class Game:
         self.SQUARE_SIZE = 60
         self.turn = 1
         # self.castle =  Black Queenside Castle, White Queenside Castle, Black Kingside Castle, White Kingside Castle
-        self.castle = [True for _ in range(4)]
+        self.castle = [False for _ in range(4)]
         self.lastMove = None
         self.end = False
+        self.moveNumber = 1
+        self.fiftyMove = 0
 
+    def load_fen(self, position):
+        parts = position.split(' ')
+        for i in range(len(parts)):
+            if(i == 0):
+                ranks = parts[i].split('/')
+                for j in range(len(ranks)):
+                    cur = 0
+                    for k in ranks[j]:
+                        print(k)
+                        val = ord(k)
+                        if(val >= 49 and val <= 56):
+                            val -= 48
+                            cur += val
+                        else:
+                            self.game[j][cur].piece = symbolToIx[k]
+                            cur += 1
+            elif(i == 1):
+                if(parts[i] == 'w'):
+                    self.turn = 1
+                else:
+                    self.turn = 0
+            elif(i == 2):
+                for j in parts[i]:
+                    if(j == 'K'):
+                        self.castle[3] = True
+                    elif(j == 'Q'):
+                        self.castle[1] = True
+                    elif(j == 'k'):
+                        self.castle[2] = True
+                    elif(j == 'q'):
+                        self.castle[0] = True
+            elif(i == 3):
+                if(parts[i] != '-'):
+                    file = ord(parts[i][0]) - 97
+                    rank = int(parts[i][1]) - 1
+                    if(rank == 3):
+                        self.lastMove = ((6, file), (4, file))
+                    else:
+                        self.lastMove = ((1, file), (3, file))
+            elif(i == 4):
+                self.moveNumber = int(parts[i])
+            elif(i == 5):
+                self.fiftyMove = int(parts[i])
     def drawBoard(self, screen):
         for row in range(self.ROWS):
             for col in range(self.COLS):
@@ -55,28 +100,7 @@ class Game:
                             row * self.SQUARE_SIZE))
 
     def addStartingPosition(self):
-        for i in range(8):
-            self.game[1][i].piece = 0
-            self.game[6][i].piece = 1
-
-            if (i < 4):
-                if (i == 0):
-                    for k in (0, 7):
-                        self.game[0][k].piece = 6
-                        self.game[7][k].piece = 7
-                elif (i == 1):
-                    for k in (1, 6):
-                        self.game[0][k].piece = 2
-                        self.game[7][k].piece = 3
-                elif (i == 2):
-                    for k in (2, 5):
-                        self.game[0][k].piece = 4
-                        self.game[7][k].piece = 5
-                else:
-                    self.game[0][3].piece = 8
-                    self.game[7][3].piece = 9
-                    self.game[0][4].piece = 10
-                    self.game[7][4].piece = 11
+        self.load_fen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
     def promotion(self, x, y, fx, fy, cur):
         while True:

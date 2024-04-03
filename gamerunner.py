@@ -62,7 +62,6 @@ if __name__ == "__main__":
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 handleMove(event)
                 res = cgame.gameEnd()
-                print(res)
                 if (res == 2):
                     pass
                 else:
