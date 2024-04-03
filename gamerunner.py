@@ -47,23 +47,32 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
     cgame = Game()
     cgame.addStartingPosition()
+    done = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif (done):
+                if (event.type == pygame.KEYDOWN):
+                    if (event.key == pygame.K_r):
+                        done = False
+                        cgame = Game()
+                        cgame.addStartingPosition()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 handleMove(event)
-                # res = cgame.gameEnd()
-                # if(res == 2):
-                #     pass
-                # else:
-                #     if(res == 0):
-                #         print('Draw!')
-                #     elif(res == 1):
-                #         print('White Wins!')
-                #     else:
-                #         print('Black Wins!')
+                res = cgame.gameEnd()
+                print(res)
+                if (res == 2):
+                    pass
+                else:
+                    if (res == 0):
+                        print('Draw!')
+                    elif (res == 1):
+                        print('White Wins!')
+                    else:
+                        print('Black Wins!')
+                    done = True
         cgame.drawBoard(screen)
         pygame.display.flip()
         clock.tick(60)

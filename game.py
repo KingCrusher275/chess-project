@@ -95,7 +95,7 @@ class Game:
                         elif (event.key == pygame.K_b):
                             self.game[fx][fy].piece = 4 + cur
                             self.game[x][y].piece = None
-                        elif (event.key == pygame.K_b):
+                        elif (event.key == pygame.K_k):
                             self.game[fx][fy].piece = 2 + cur
                             self.game[x][y].piece = None
 
@@ -123,15 +123,21 @@ class Game:
                         moves[(i, j)] += self.rookMove(i, j)
                 elif (self.game[i][j].piece == 10 or self.game[i][j].piece == 11 and self.game[i][j].piece % 2 == color):
                     px, py = i, j
-
         for mov in moves.values():
             if ((px, py) in mov):
                 return True
         return False
 
+    def generateAllMoves(self, color):
+        moves = defaultdict(list)
+        for i in range(8):
+            for j in range(8):
+                if (self.game[i][j].piece != None and self.game[i][j].piece % 2 == color):
+                    moves[(i, j)] += self.generateMove(i, j)
+        return moves
+
     def makeMove(self, x, y, fx, fy):
         cur = self.game[x][y].piece
-        # print(cur)
         self.lastMove = ((x, y), (fx, fy))
         if ((cur == 0 or cur == 1) and (abs(fx - x) == 1 and abs(fy - y) == 1 and self.game[fx][fy].piece == None)):
             self.game[fx][fy].piece = self.game[x][y].piece
@@ -248,8 +254,19 @@ class Game:
                 self.game[fx][fy].piece = tmp
         return validmoves
 
-    def gameEnd():
-        pass
+    def gameEnd(self):
+        color = self.turn
+        moves = self.generateAllMoves(color)
+        for l in moves.values():
+            if (len(l) > 0):
+                return 2
+        if (self.inCheck(color)):
+            if (color == 0):
+                return 1
+            else:
+                return -1
+        else:
+            return 0
 
     def bishopMove(self, x, y):
         moves = []
