@@ -3,33 +3,78 @@ import os
 from square import Square
 from collections import defaultdict
 import sys
-
-WHITE = (255, 255, 255)
-BLACK = (100, 100, 100)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
-
-names = ['bpawn', 'wpawn', 'bknight', 'wknight', 'bbishop',
-         'wbishop', 'brook', 'wrook', 'bqueen', 'wqueen', 'bking', 'wking']
-
+from display import Display
 symbolToIx = {'p':0, 'P':1, 'n':2, 'N':3, 'b':4, 'B':5, 'r':6, 'R':7, 'q':8, 'Q':9, 'k':10, 'K':11}
+symbolToCastle = {'k':2, 'q':0, 'Q':1, 'K':3}
+ixToSymbol = dict([(value, key) for key, value in symbolToIx.items()])
+castleToSymbol = dict([(value, key) for key, value in symbolToCastle.items()])
+ixToFile = dict([(i, chr(97+i)) for i in range(8)])
+
 class Game:
     def __init__(self):
         self.ROWS = 8
         self.COLS = 8
         self.clicked = False
         self.squareClicked = None
-        self.game = [[Square(WHITE if (i+j) % 2 == 0 else BLACK, None) for i in range(self.COLS)]
+        self.game = [[Square("WHITE" if (i+j) % 2 == 0 else "BLACK", None) for i in range(self.COLS)]
                      for j in range(self.ROWS)]
-        self.SQUARE_SIZE = 60
         self.turn = 1
         # self.castle =  Black Queenside Castle, White Queenside Castle, Black Kingside Castle, White Kingside Castle
         self.castle = [False for _ in range(4)]
         self.lastMove = None
         self.end = False
-        self.moveNumber = 1
+        self.moveNumber = 0
         self.fiftyMove = 0
+        
+    def export_fen(self):
+        fen_string = ""
+        for i in range(8):
+            cur = 0
+            for j in range(8):
+                if(self.game[i][j].piece != None):
+                    if(cur != 0):
+                        fen_string += str(cur)
+                    fen_string += ixToSymbol[self.game[i][j].piece]
+                    cur = 0
+                else:
+                    cur += 1
+            if(cur != 0):
+                fen_string += str(cur)
+            if(i < 7):
+                fen_string += "/"
+        
+        fen_string += " "
+        if(self.turn == 1):
+            fen_string += "w"
+        else:
+            fen_string += "b"
 
+        fen_string += " "
+        if(sum(self.castle) == 0):
+            fen_string += "-"
+        else:
+            for i in [3, 1, 2, 0]: 
+                if(self.castle[i]):
+                    fen_string += castleToSymbol[i]
+        fen_string += " "
+        if(self.lastMove == None):
+           fen_string += "-" 
+        else:
+            if(self.game[self.lastMove[1][1]][self.lastMove[1][0]].piece == 0):
+                if(self.lastMove[0][0] == 1 and self.lastMove[1][0] - self.lastMove[0][0] == 2):
+                    fen_string += f"{ixToFile[self.lastMove[0][1]]}3"
+                else:
+                    fen_string += "-"
+            elif(self.game[self.lastMove[1][1]][self.lastMove[1][0]].piece == 1):
+                if(self.lastMove[0][0] == 6 and self.lastMove[1][0] - self.lastMove[0][0] == -2):
+                    fen_string += "{ixToFile[self.lastMove[0][1]]}6"
+                else:
+                    fen_string += "-"
+            else:
+                fen_string += "-"
+
+        fen_string += f" {self.fiftyMove} {self.moveNumber}"
+        return fen_string
     def load_fen(self, position):
         parts = position.split(' ')
         for i in range(len(parts)):
@@ -38,7 +83,6 @@ class Game:
                 for j in range(len(ranks)):
                     cur = 0
                     for k in ranks[j]:
-                        print(k)
                         val = ord(k)
                         if(val >= 49 and val <= 56):
                             val -= 48
@@ -70,35 +114,9 @@ class Game:
                     else:
                         self.lastMove = ((1, file), (3, file))
             elif(i == 4):
-                self.moveNumber = int(parts[i])
-            elif(i == 5):
                 self.fiftyMove = int(parts[i])
-    def drawBoard(self, screen):
-        for row in range(self.ROWS):
-            for col in range(self.COLS):
-                square = pygame.Surface((self.SQUARE_SIZE, self.SQUARE_SIZE))
-                square_rect = square.get_rect()
-                if (self.game[row][col].clicked):
-                    square.fill(BLUE)
-                elif (self.game[row][col].possibleMove):
-                    square.fill(GREEN)
-                else:
-                    square.fill(self.game[row][col].color)
-                if (self.game[row][col].piece != None):
-
-                    img = pygame.image.load(
-                        os.path.join(
-                            'public', f'{names[self.game[row][col].piece]}.png')
-                    )
-                    img = pygame.transform.scale(
-                        img, (self.SQUARE_SIZE, self.SQUARE_SIZE))
-
-                    piece_rect = img.get_rect()
-                    piece_rect.center = square_rect.center
-                    square.blit(img, piece_rect.topleft)
-                screen.blit(square, (col * self.SQUARE_SIZE,
-                            row * self.SQUARE_SIZE))
-
+            elif(i == 5):
+                self.moveNumber = int(parts[i])
     def addStartingPosition(self):
         self.load_fen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
@@ -281,6 +299,8 @@ class Game:
     def gameEnd(self):
         color = self.turn
         moves = self.generateAllMoves(color)
+        if(self.fiftyMove >= 50):
+            return 0
         for l in moves.values():
             if (len(l) > 0):
                 return 2
