@@ -10,7 +10,7 @@ from sharedcontext import SharedContext
 from menustate import MenuState 
 from playstate import PlayState
 from settingstate import SettingState
-
+from menudisplay import MenuDisplay
 
 pygame.init()
 size = width, height = 650, 480
@@ -23,8 +23,10 @@ class GameStateMachine:
 
         pldisplay = PlayDisplay(context)
         plsidebar = PlaySidebar(context, pldisplay.setNewGame, pldisplay.setFlipBoard, pldisplay.setSettings)
+
+        menudisplay = MenuDisplay(context)
         self.states = {
-                "menu": MenuState(context, None, self),
+                "menu": MenuState(context, menudisplay, self),
                 "play": PlayState(context, pldisplay, plsidebar, self),
                 "setting": SettingState(context, None, self)
                 }
@@ -51,6 +53,7 @@ if __name__ == "__main__":
     context = SharedContext(screen)
     gameMachine = GameStateMachine(None, context)
     gameMachine.change_state("play")
+    # gameMachine.change_state("menu")
     while True:
         for event in pygame.event.get():
             gameMachine.handleEvent(event)

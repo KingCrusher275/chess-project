@@ -7,6 +7,6 @@ class MenuState(GameState):
     def exit(self):
         pass
     def render(self):
-        pass
+        self.display.draw(self.context.screen)
     def handleEvent(self, event): pass
 
