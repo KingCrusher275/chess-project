@@ -3,15 +3,14 @@ import os
 from square import Square
 from collections import defaultdict
 import sys
-from display import Display
 symbolToIx = {'p':0, 'P':1, 'n':2, 'N':3, 'b':4, 'B':5, 'r':6, 'R':7, 'q':8, 'Q':9, 'k':10, 'K':11}
 symbolToCastle = {'k':2, 'q':0, 'Q':1, 'K':3}
 ixToSymbol = dict([(value, key) for key, value in symbolToIx.items()])
 castleToSymbol = dict([(value, key) for key, value in symbolToCastle.items()])
 ixToFile = dict([(i, chr(97+i)) for i in range(8)])
-
+startingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" 
 class Game:
-    def __init__(self):
+    def __init__(self, fen=startingPosition):
         self.ROWS = 8
         self.COLS = 8
         self.clicked = False
@@ -25,6 +24,7 @@ class Game:
         self.end = False
         self.moveNumber = 0
         self.fiftyMove = 0
+        self.load_fen(fen)
         
     def export_fen(self):
         fen_string = ""

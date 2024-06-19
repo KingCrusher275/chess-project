@@ -1,7 +1,7 @@
 import pygame
 
 class Button:
-    def __init__(self, tlx, tly, width, height, color, hoverColor, textColor, font, fontSize, text): 
+    def __init__(self, tlx, tly, width, height, color, hoverColor, textColor, font, fontSize, text, action): 
         self.tlx = tlx
         self.tly = tly
         self.width = width
@@ -14,7 +14,7 @@ class Button:
         self.fontSize = fontSize
         self.text = text  
         self.rect = pygame.Rect(self.tly, self.tlx, self.width, self.height)
-
+        self.action = action
         self.curColor = color
     def draw_button(self, screen): 
         self.rect = pygame.Rect(self.tly, self.tlx, self.width, self.height)
@@ -24,7 +24,7 @@ class Button:
         text_rect = text.get_rect(center=self.rect.center)
         screen.blit(text, text_rect)
 
-    def handle_event(self, event):
+    def handleEvent(self, event):
         if(event.type == pygame.MOUSEMOTION):
             mouse = event.pos
             if self.rect.collidepoint(mouse):
@@ -34,6 +34,5 @@ class Button:
         elif(event.type == pygame.MOUSEBUTTONDOWN):
             mouse = event.pos
             if self.rect.collidepoint(mouse):
-                print(self.text)
-
+                self.action()
 
